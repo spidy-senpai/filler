@@ -23,7 +23,7 @@ def fillcolour_model(image):
 	"""
 
 	# Paths to load the model
-	DIR = r"C:\Users\HP\Downloads\coding\PROJECT 10"
+	DIR = r"C:\Users\HP\Downloads\coding\PROJECT 10" #change this directory to your own directory,twin ;)
 	PROTOTXT = os.path.join(DIR, r"model/colorization_deploy_v2.prototxt")
 	POINTS = os.path.join(DIR, r"model/pts_in_hull.npy")
 	MODEL = os.path.join(DIR, r"model/colorization_release_v2.caffemodel")
@@ -75,4 +75,4 @@ def fillcolour_model(image):
 	print("succesful")
 	return colorized_pil
 
-# fillcolour_model("images/2.jpg")
+
