@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Colorization Studio</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #0f172a;
+            color: #e2e8f0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            background: #1e293b;
+            border-bottom: 1px solid #334155;
+            padding: 1.5rem 3rem;
+        }
+
+        .header h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #f1f5f9;
+            letter-spacing: -0.025em;
+        }
+
+        .header p {
+            font-size: 0.875rem;
+            color: #94a3b8;
+            margin-top: 0.25rem;
+        }
+
+        .main-content {
+            flex: 1;
+            display: flex;
+            padding: 2rem 3rem;
+            gap: 2rem;
+            max-width: 1800px;
+            width: 100%;
+            margin: 0 auto;
+        }
+
+        .left-panel {
+            width: 400px;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .right-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .card {
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+        }
+
+        .card-title {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #f1f5f9;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 1rem;
+        }
+
+        .upload-zone {
+            border: 2px dashed #475569;
+            border-radius: 0.5rem;
+            padding: 3rem 2rem;
+            text-align: center;
+            background: #0f172a;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .upload-zone:hover {
+            border-color: #64748b;
+            background: #1e293b;
+        }
+
+        .upload-zone.dragover {
+            border-color: #3b82f6;
+            background: #1e293b;
+        }
+
+        .upload-icon {
+            width: 48px;
+            height: 48px;
+            margin: 0 auto 1rem;
+            stroke: #64748b;
+        }
+
+        .upload-text {
+            font-size: 0.875rem;
+            color: #cbd5e1;
+            margin-bottom: 0.5rem;
+        }
+
+        .upload-hint {
+            font-size: 0.75rem;
+            color: #64748b;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s ease;
+            width: 100%;
+        }
+
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background: #2563eb;
+        }
+
+        .btn-primary:disabled {
+            background: #1e3a5f;
+            color: #64748b;
+            cursor: not-allowed;
+        }
+
+        .btn-secondary {
+            background: #334155;
+            color: #e2e8f0;
+        }
+
+        .btn-secondary:hover {
+            background: #475569;
+        }
+
+        .image-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            padding-top: 1rem;
+            border-top: 1px solid #334155;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.875rem;
+        }
+
+        .info-label {
+            color: #94a3b8;
+        }
+
+        .info-value {
+            color: #e2e8f0;
+            font-weight: 500;
+        }
+
+        .workspace {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            height: 100%;
+        }
+
+        .viewer-panel {
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 0.75rem;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .viewer-header {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid #334155;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .viewer-title {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #f1f5f9;
+        }
+
+        .viewer-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .icon-btn {
+            background: transparent;
+            border: 1px solid #334155;
+            color: #94a3b8;
+            padding: 0.5rem;
+            border-radius: 0.375rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 0.75rem;
+        }
+
+        .icon-btn:hover {
+            background: #334155;
+            color: #e2e8f0;
+        }
+
+        .viewer-content {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            background: #0f172a;
+            position: relative;
+        }
+
+        .viewer-content img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            border-radius: 0.5rem;
+        }
+
+        .placeholder {
+            text-align: center;
+            color: #64748b;
+        }
+
+        .placeholder-icon {
+            width: 64px;
+            height: 64px;
+            margin: 0 auto 1rem;
+            stroke: #475569;
+        }
+
+        .loading-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.95);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid #334155;
+            border-top-color: #3b82f6;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            font-size: 0.875rem;
+            color: #94a3b8;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 0.5rem;
+        }
+
+        .status-ready {
+            background: #10b981;
+        }
+
+        .status-processing {
+            background: #f59e0b;
+        }
+
+        .api-info {
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 0.75rem;
+            padding: 1.25rem;
+            margin-top: 1.5rem;
+        }
+
+        .api-section {
+            margin-bottom: 1rem;
+        }
+
+        .api-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .api-section-title {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.5rem;
+        }
+
+        .code-block {
+            background: #0f172a;
+            border: 1px solid #334155;
+            border-radius: 0.375rem;
+            padding: 0.75rem;
+            font-family: 'Courier New', monospace;
+            font-size: 0.75rem;
+            color: #cbd5e1;
+            overflow-x: auto;
+        }
+
+        .api-list {
+            list-style: none;
+            font-size: 0.75rem;
+            color: #cbd5e1;
+            line-height: 1.6;
+        }
+
+        .api-list li {
+            padding-left: 1rem;
+            position: relative;
+        }
+
+        .api-list li:before {
+            content: "•";
+            position: absolute;
+            left: 0;
+            color: #64748b;
+        }
+
+        code {
+            background: #0f172a;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-family: 'Courier New', monospace;
+            font-size: 0.7rem;
+            color: #60a5fa;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Image Colorization Studio</h1>
+        <p>AI-powered black and white image colorization</p>
+    </div>
+
+    <div class="main-content">
+        <div class="left-panel">
+            <div class="card">
+                <div class="card-title">Upload Image</div>
+                <div class="upload-zone" id="dropZone">
+                    <svg class="upload-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                    </svg>
+                    <div class="upload-text">Drop image here or click to browse</div>
+                    <div class="upload-hint">Supports: JPG, PNG, WebP (Max 10MB)</div>
+                    <input type="file" id="fileInput" accept="image/*">
+                </div>
+            </div>
+
+            <div class="card" id="imageInfo" style="display: none;">
+                <div class="card-title">Image Details</div>
+                <div class="image-info">
+                    <div class="info-row">
+                        <span class="info-label">Filename</span>
+                        <span class="info-value" id="fileName">-</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Dimensions</span>
+                        <span class="info-value" id="dimensions">-</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">File Size</span>
+                        <span class="info-value" id="fileSize">-</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Status</span>
+                        <span class="info-value">
+                            <span class="status-indicator status-ready"></span>
+                            <span id="status">Ready</span>
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <button class="btn btn-primary" id="colorizeBtn" disabled>
+                Process Image
+            </button>
+
+            <div class="api-info">
+                <div class="api-section">
+                    <div class="api-section-title">Request Format</div>
+                    <ul class="api-list">
+                        <li>Method: <code>POST</code></li>
+                        <li>Content-Type: <code>multipart/form-data</code></li>
+                        <li>Field: <code>image</code> (file)</li>
+                    </ul>
+                </div>
+                <div class="api-section">
+                    <div class="api-section-title">Response Format</div>
+                    <div class="code-block">{"image": "data:image/png;base64,..."}</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="right-panel">
+            <div class="workspace">
+                <div class="viewer-panel">
+                    <div class="viewer-header">
+                        <div class="viewer-title">Original Image</div>
+                    </div>
+                    <div class="viewer-content" id="originalPreview">
+                        <div class="placeholder">
+                            <svg class="placeholder-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                            </svg>
+                            <div>No image selected</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="viewer-panel">
+                    <div class="viewer-header">
+                        <div class="viewer-title">Colorized Result</div>
+                        <div class="viewer-actions">
+                            <button class="icon-btn" id="downloadBtn" style="display: none;">
+                                Download
+                            </button>
+                        </div>
+                    </div>
+                    <div class="viewer-content" id="colorizedPreview">
+                        <div class="placeholder">
+                            <svg class="placeholder-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"/>
+                            </svg>
+                            <div>Colorized image will appear here</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let selectedFile = null;
+        let originalImageData = null;
+        const fileInput = document.getElementById('fileInput');
+        const dropZone = document.getElementById('dropZone');
+        const originalPreview = document.getElementById('originalPreview');
+        const colorizedPreview = document.getElementById('colorizedPreview');
+        const colorizeBtn = document.getElementById('colorizeBtn');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const imageInfo = document.getElementById('imageInfo');
+
+        fileInput.addEventListener('change', handleFileSelect);
+
+        dropZone.addEventListener('click', () => fileInput.click());
+
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('dragover');
+        });
+
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('dragover');
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFile(files[0]);
+            }
+        });
+
+        function handleFileSelect(e) {
+            const file = e.target.files[0];
+            if (file) {
+                handleFile(file);
+            }
+        }
+
+        function handleFile(file) {
+            if (!file.type.startsWith('image/')) {
+                alert('Please select an image file');
+                return;
+            }
+
+            selectedFile = file;
+            
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                originalImageData = e.target.result;
+                const img = new Image();
+                img.onload = () => {
+                    document.getElementById('fileName').textContent = file.name;
+                    document.getElementById('dimensions').textContent = `${img.width} × ${img.height}`;
+                    document.getElementById('fileSize').textContent = formatFileSize(file.size);
+                    imageInfo.style.display = 'block';
+                };
+                img.src = e.target.result;
+                
+                originalPreview.innerHTML = `<img src="${e.target.result}" alt="Original">`;
+                colorizeBtn.disabled = false;
+                
+                colorizedPreview.innerHTML = `
+                    <div class="placeholder">
+                        <svg class="placeholder-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"/>
+                        </svg>
+                        <div>Colorized image will appear here</div>
+                    </div>`;
+                downloadBtn.style.display = 'none';
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes < 1024) return bytes + ' B';
+            if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+            return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+        }
+
+        colorizeBtn.addEventListener('click', async () => {
+            if (!selectedFile) return;
+
+            const statusSpan = document.getElementById('status');
+            const statusIndicator = document.querySelector('.status-indicator');
+            statusSpan.textContent = 'Processing';
+            statusIndicator.classList.remove('status-ready');
+            statusIndicator.classList.add('status-processing');
+
+            colorizedPreview.innerHTML = `
+                <div class="loading-overlay">
+                    <div class="spinner"></div>
+                    <div class="loading-text">Processing image...</div>
+                </div>`;
+            
+            colorizeBtn.disabled = true;
+
+            try {
+                const formData = new FormData();
+                formData.append('image', selectedFile);
+
+                const response = await fetch('/api/colorize', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    throw new Error('API request failed');
+                }
+
+                const data = await response.json();
+                
+                if (data.image) {
+                    colorizedPreview.innerHTML = `<img src="${data.image}" alt="Colorized">`;
+                    downloadBtn.style.display = 'block';
+                    downloadBtn.onclick = () => downloadImage(data.image);
+                    statusSpan.textContent = 'Complete';
+                    statusIndicator.classList.remove('status-processing');
+                    statusIndicator.classList.add('status-ready');
+                }
+
+            } catch (error) {
+                console.error('Error:', error);
+                colorizedPreview.innerHTML = `
+                    <div class="placeholder" style="color: #ef4444;">
+                        <svg class="placeholder-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        <div>Error processing image</div>
+                    </div>`;
+                statusSpan.textContent = 'Error';
+            } finally {
+                colorizeBtn.disabled = false;
+            }
+        });
+
+        function downloadImage(dataUrl) {
+            const link = document.createElement('a');
+            link.href = dataUrl;
+            link.download = 'colorized-' + selectedFile.name;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+    </script>
+</body>
+</html>
