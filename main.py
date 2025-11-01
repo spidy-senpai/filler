@@ -19,9 +19,11 @@ def colorize_image():
             return {'error': 'No image file provided'}, 400
         
         image_file = request.files['image']
+        print(type(image_file))
         
         # Process with your model
         colorized_image = fillcolour_model(image_file)
+        print(type(colorized_image))
         
         # Convert to bytes and return
         img_byte_arr = io.BytesIO()
