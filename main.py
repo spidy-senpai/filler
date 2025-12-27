@@ -44,8 +44,13 @@ def colorize_image():
         # )
     
     except Exception as e:
-        print(f"Error: {str(e)}")
-        return {'error': str(e)}, 500
+        import traceback
+        error_msg = traceback.format_exc()
+        print(f"ERROR in colorize_image: {error_msg}")
+        return {'error': str(e), 'traceback': error_msg}, 500
 
 if __name__ == "__main__":
     app.run(debug=True)
+
+# Expose app for Vercel
+# This line is needed for Vercel to find and serve the Flask app
