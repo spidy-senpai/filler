@@ -26,7 +26,11 @@ def fillcolour_model(image):
 	DIR = os.path.dirname(os.path.abspath(__file__))
 	PROTOTXT = os.path.join(DIR, "model", "colorization_deploy_v2.prototxt")
 	POINTS = os.path.join(DIR, "model", "pts_in_hull.npy")
-	MODEL = os.path.join(DIR, "model", "colorization_release_v2.caffemodel")
+	
+	# Use /tmp for Vercel (writable), fall back to local model dir for development
+	import tempfile
+	TEMP_MODEL_DIR = os.path.join(tempfile.gettempdir(), "colorize_model")
+	MODEL = os.path.join(TEMP_MODEL_DIR, "colorization_release_v2.caffemodel")
 
 	# Download model from Google Drive if it doesn't exist
 	if not os.path.exists(MODEL):
@@ -37,33 +41,33 @@ def fillcolour_model(image):
 		GOOGLE_DRIVE_URL = "https://drive.google.com/uc?export=download&id=1wk_gADxhzMfvW_tnb1voCSEB2oJ3ARP_"
 		
 		try:
-			# Create model directory if it doesn't exist
-			os.makedirs(os.path.dirname(MODEL), exist_ok=True)
+			# Create model directory if it doesn't exist (in /tmp which is writable)
+			os.makedirs(TEMP_MODEL_DIR, exist_ok=True)
 			
-			# Download the file with streaming
-			print(f"Downloading model from Google Drive...")
+			print(f"Starting download from Google Drive to {TEMP_MODEL_DIR}...")
 			session = requests.Session()
-			response = session.get(GOOGLE_DRIVE_URL, stream=True, timeout=300)
+			
+			# Download with a longer timeout for large files
+			response = session.get(GOOGLE_DRIVE_URL, stream=True, timeout=600, verify=False)
 			response.raise_for_status()
 			
+			# Get total file size
+			total_size = int(response.headers.get('content-length', 0))
+			print(f"Downloading {total_size / (1024*1024):.1f} MB...")
+			
 			# Write the file in chunks
+			downloaded = 0
 			with open(MODEL, 'wb') as f:
-				for chunk in response.iter_content(chunk_size=8192):
+				for chunk in response.iter_content(chunk_size=1024*1024):  # 1MB chunks
 					if chunk:
 						f.write(chunk)
+						downloaded += len(chunk)
+						if downloaded % (10*1024*1024) == 0:  # Log every 10MB
+							print(f"Downloaded {downloaded / (1024*1024):.1f} MB...")
 			
-			print(f"Model downloaded successfully to {MODEL}")
+			print(f"Model downloaded successfully! File size: {os.path.getsize(MODEL) / (1024*1024):.1f} MB")
 		except Exception as e:
-			error_msg = f"""
-			Failed to download model from Google Drive: {str(e)}
-			
-			Model file not found at: {MODEL}
-			
-			Please ensure:
-			1. Google Drive link is still accessible and public
-			2. You have internet connection
-			3. The file has enough storage space
-			"""
+			error_msg = f"Failed to download model: {str(e)}"
 			print(f"ERROR: {error_msg}")
 			raise FileNotFoundError(error_msg)
 
