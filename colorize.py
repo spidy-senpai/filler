@@ -48,8 +48,8 @@ def fillcolour_model(image):
 			print(f"Starting download from Google Drive to {TEMP_MODEL_DIR}...")
 			print(f"This may take 1-2 minutes for the first request...")
 			
-			# Use gdown to download - it handles Google Drive redirects automatically
-			gdown.download(GOOGLE_DRIVE_URL, MODEL, quiet=False)
+			# Use gdown to download - disable cookies to avoid permission errors
+			gdown.download(GOOGLE_DRIVE_URL, MODEL, quiet=False, use_cookies=False)
 			
 			file_size = os.path.getsize(MODEL) / (1024*1024)
 			print(f"✓ Model downloaded successfully! File size: {file_size:.1f} MB")
