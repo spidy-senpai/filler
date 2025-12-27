@@ -14,40 +14,41 @@ def index():
 @app.route("/api/colorize", methods=['POST'])
 def colorize_image():
     try:
-        # Fix: Use square brackets
         if 'image' not in request.files:
             return {'error': 'No image file provided'}, 400
         
         image_file = request.files['image']
-        print(type(image_file))
+        print(f"Processing image: {image_file.filename}")
         
         # Process with your model
         colorized_image = fillcolour_model(image_file)
-        print(type(colorized_image))
+        print("Image colorized successfully")
         
-        # Convert to bytes and return
+        # Convert to bytes and return as base64
         img_byte_arr = io.BytesIO()
-        colorized_image.save(img_byte_arr, format='JPEG', quality=95)
+        colorized_image.save(img_byte_arr, format='JPEG', quality=85)
         img_byte_arr.seek(0)
-
+        
         import base64
         img_base64 = base64.b64encode(img_byte_arr.getvalue()).decode('utf-8')
+        print(f"Base64 encoded, size: {len(img_base64)} bytes")
         
-        return {
+        # Return with proper JSON structure
+        response = {
+            'success': True,
             'image': f'data:image/jpeg;base64,{img_base64}'
         }
-    
-        # return send_file(
-        #     img_byte_arr,
-        #     mimetype='image/jprg',
-        #     as_attachment=False
-        # )
+        
+        return response, 200
     
     except Exception as e:
         import traceback
         error_msg = traceback.format_exc()
-        print(f"ERROR in colorize_image: {error_msg}")
-        return {'error': str(e), 'traceback': error_msg}, 500
+        print(f"ERROR in colorize_image:\n{error_msg}")
+        return {
+            'success': False,
+            'error': str(e)
+        }, 500
 
 if __name__ == "__main__":
     app.run(debug=True)
