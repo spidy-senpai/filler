@@ -31,8 +31,7 @@ def fillcolour_model(image):
 	# Download model from Google Drive if it doesn't exist
 	if not os.path.exists(MODEL):
 		print("Model not found locally. Downloading from Google Drive...")
-		import urllib.request
-		import shutil
+		import requests
 		
 		# Google Drive direct download URL
 		GOOGLE_DRIVE_URL = "https://drive.google.com/uc?export=download&id=1wk_gADxhzMfvW_tnb1voCSEB2oJ3ARP_"
@@ -41,9 +40,18 @@ def fillcolour_model(image):
 			# Create model directory if it doesn't exist
 			os.makedirs(os.path.dirname(MODEL), exist_ok=True)
 			
-			# Download the file
+			# Download the file with streaming
 			print(f"Downloading model from Google Drive...")
-			urllib.request.urlretrieve(GOOGLE_DRIVE_URL, MODEL)
+			session = requests.Session()
+			response = session.get(GOOGLE_DRIVE_URL, stream=True, timeout=300)
+			response.raise_for_status()
+			
+			# Write the file in chunks
+			with open(MODEL, 'wb') as f:
+				for chunk in response.iter_content(chunk_size=8192):
+					if chunk:
+						f.write(chunk)
+			
 			print(f"Model downloaded successfully to {MODEL}")
 		except Exception as e:
 			error_msg = f"""
@@ -56,6 +64,7 @@ def fillcolour_model(image):
 			2. You have internet connection
 			3. The file has enough storage space
 			"""
+			print(f"ERROR: {error_msg}")
 			raise FileNotFoundError(error_msg)
 
 	# Argparser
