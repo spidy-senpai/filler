@@ -23,10 +23,40 @@ def fillcolour_model(image):
 	"""
 
 	# Paths to load the model
-	DIR = r"C:\Users\HP\Downloads\coding\PROJECT 10" #change this directory to your own directory,twin ;)
-	PROTOTXT = os.path.join(DIR, r"model/colorization_deploy_v2.prototxt")
-	POINTS = os.path.join(DIR, r"model/pts_in_hull.npy")
-	MODEL = os.path.join(DIR, r"model/colorization_release_v2.caffemodel")
+	DIR = os.path.dirname(os.path.abspath(__file__))
+	PROTOTXT = os.path.join(DIR, "model", "colorization_deploy_v2.prototxt")
+	POINTS = os.path.join(DIR, "model", "pts_in_hull.npy")
+	MODEL = os.path.join(DIR, "model", "colorization_release_v2.caffemodel")
+
+	# Download model from Google Drive if it doesn't exist
+	if not os.path.exists(MODEL):
+		print("Model not found locally. Downloading from Google Drive...")
+		import urllib.request
+		import shutil
+		
+		# Google Drive direct download URL
+		GOOGLE_DRIVE_URL = "https://drive.google.com/uc?export=download&id=1wk_gADxhzMfvW_tnb1voCSEB2oJ3ARP_"
+		
+		try:
+			# Create model directory if it doesn't exist
+			os.makedirs(os.path.dirname(MODEL), exist_ok=True)
+			
+			# Download the file
+			print(f"Downloading model from Google Drive...")
+			urllib.request.urlretrieve(GOOGLE_DRIVE_URL, MODEL)
+			print(f"Model downloaded successfully to {MODEL}")
+		except Exception as e:
+			error_msg = f"""
+			Failed to download model from Google Drive: {str(e)}
+			
+			Model file not found at: {MODEL}
+			
+			Please ensure:
+			1. Google Drive link is still accessible and public
+			2. You have internet connection
+			3. The file has enough storage space
+			"""
+			raise FileNotFoundError(error_msg)
 
 	# Argparser
 	# ap = argparse.ArgumentParser()
