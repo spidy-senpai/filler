@@ -35,39 +35,31 @@ def fillcolour_model(image):
 	# Download model from Google Drive if it doesn't exist
 	if not os.path.exists(MODEL):
 		print("Model not found locally. Downloading from Google Drive...")
-		import requests
+		import gdown
 		
-		# Google Drive direct download URL
-		GOOGLE_DRIVE_URL = "https://drive.google.com/uc?export=download&id=1wk_gADxhzMfvW_tnb1voCSEB2oJ3ARP_"
+		# Google Drive file ID (extracted from the share link)
+		FILE_ID = "1wk_gADxhzMfvW_tnb1voCSEB2oJ3ARP_"
+		GOOGLE_DRIVE_URL = f"https://drive.google.com/uc?id={FILE_ID}"
 		
 		try:
-			# Create model directory if it doesn't exist (in /tmp which is writable)
+			# Create model directory if it doesn't exist
 			os.makedirs(TEMP_MODEL_DIR, exist_ok=True)
 			
 			print(f"Starting download from Google Drive to {TEMP_MODEL_DIR}...")
-			session = requests.Session()
+			print(f"This may take 1-2 minutes for the first request...")
 			
-			# Download with a longer timeout for large files
-			response = session.get(GOOGLE_DRIVE_URL, stream=True, timeout=600, verify=False)
-			response.raise_for_status()
+			# Use gdown to download - it handles Google Drive redirects automatically
+			gdown.download(GOOGLE_DRIVE_URL, MODEL, quiet=False)
 			
-			# Get total file size
-			total_size = int(response.headers.get('content-length', 0))
-			print(f"Downloading {total_size / (1024*1024):.1f} MB...")
+			file_size = os.path.getsize(MODEL) / (1024*1024)
+			print(f"✓ Model downloaded successfully! File size: {file_size:.1f} MB")
 			
-			# Write the file in chunks
-			downloaded = 0
-			with open(MODEL, 'wb') as f:
-				for chunk in response.iter_content(chunk_size=1024*1024):  # 1MB chunks
-					if chunk:
-						f.write(chunk)
-						downloaded += len(chunk)
-						if downloaded % (10*1024*1024) == 0:  # Log every 10MB
-							print(f"Downloaded {downloaded / (1024*1024):.1f} MB...")
-			
-			print(f"Model downloaded successfully! File size: {os.path.getsize(MODEL) / (1024*1024):.1f} MB")
+			# Verify file size is reasonable (should be ~128MB)
+			if file_size < 100:
+				raise ValueError(f"Downloaded file is too small ({file_size:.1f} MB). Download may have failed.")
+				
 		except Exception as e:
-			error_msg = f"Failed to download model: {str(e)}"
+			error_msg = f"Failed to download model from Google Drive: {str(e)}"
 			print(f"ERROR: {error_msg}")
 			raise FileNotFoundError(error_msg)
 
